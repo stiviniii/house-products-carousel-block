@@ -4,7 +4,7 @@ Tags: woocommerce, gutenberg, carousel, products, block
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,11 @@ The carousel will still display products with images, titles, prices, and rating
 Add a product tag with the slug `best-seller` to any WooCommerce product. The badge will appear automatically on those products.
 
 == Changelog ==
+
+= 1.0.1 =
+* Update Splide arrows to modern icons.
+* Fix arrow alignment and orientation.
+* Improve UI responsiveness for carousel navigation.
 
 = 1.0.0 =
 * Initial release.
