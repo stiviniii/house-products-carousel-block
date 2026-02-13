@@ -1,6 +1,6 @@
 {
 	"name": "house-products-carousel-block",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "A modern Gutenberg block for WooCommerce product carousels with Secure Custom Fields specs.",
 	"author": "Steven Ayo",
 	"license": "GPL-2.0-or-later",

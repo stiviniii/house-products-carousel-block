@@ -7,7 +7,8 @@
 
 // ─── Variables ──────────────────────────────────────
 $hpc-primary: #1a1a2e;
-$hpc-accent: #e94560;
+// $hpc-accent: #e94560;
+$hpc-accent: var(--wp--preset--color--accent);
 $hpc-accent-light: #ff6b81;
 $hpc-bg: #f8f9fc;
 $hpc-card-bg: #ffffff;
@@ -30,8 +31,20 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
 // ─── Splide Overrides ───────────────────────────────
 .hpc-carousel {
+
 	&.splide {
 		padding: 0.5rem 0;
+	}
+
+	.splide__arrows {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		z-index: 10;
+		inset-inline: 10px;
+
+		display: flex;
+		justify-content: space-between;
 	}
 
 	.splide__track {
@@ -53,10 +66,10 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 	.splide__arrow {
 		width: 44px;
 		height: 44px;
+		padding: 0;
 		background: $hpc-card-bg;
 		border: 1px solid $hpc-border;
 		border-radius: 50%;
-		box-shadow: $hpc-shadow;
 		opacity: 1;
 		transition: all $hpc-transition;
 		display: flex;
@@ -65,9 +78,11 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		cursor: pointer;
 
 		svg {
-			width: 18px;
-			height: 18px;
+			width: 20px;
+			height: 20px;
 			fill: $hpc-primary;
+			// Ensure it's perfectly centered
+			display: block;
 		}
 
 		&:hover,
@@ -89,6 +104,10 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
 		&--prev {
 			left: -22px;
+
+			svg {
+				transform: rotate(180deg);
+			}
 		}
 
 		&--next {
@@ -105,19 +124,19 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 // ─── Product Card ───────────────────────────────────
 .hpc-card {
 	position: relative;
-	border-radius: $hpc-radius;
+	// border-radius: $hpc-radius;
 	overflow: hidden;
 	background: $hpc-card-bg;
-	box-shadow: $hpc-shadow;
+	// box-shadow: $hpc-shadow;
 	border: 1px solid $hpc-border;
-	transition: box-shadow $hpc-transition, transform $hpc-transition,
-		border-color $hpc-transition;
+	// transition: box-shadow $hpc-transition, transform $hpc-transition,
+	// 	border-color $hpc-transition;
 	height: 100%;
 
 	&:hover {
-		box-shadow: $hpc-shadow-hover;
-		transform: translateY(-4px);
-		border-color: transparent;
+		// box-shadow: $hpc-shadow-hover;
+		// transform: translateY(-4px);
+		// border-color: transparent;
 	}
 
 	// ─── Card Link ──────────────────────────────────
@@ -145,7 +164,7 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 	&__image-wrapper {
 		position: relative;
 		width: 100%;
-		aspect-ratio: 4 / 3;
+		aspect-ratio: 3 / 2;
 		overflow: hidden;
 		background: linear-gradient(135deg, #f0f0f0 0%, #e8e8e8 100%);
 	}
@@ -154,10 +173,10 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+		// transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 
 		.hpc-card:hover & {
-			transform: scale(1.06);
+			// transform: scale(1.06);
 		}
 
 		&--placeholder {
@@ -246,26 +265,26 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 
 	// ─── Specs Row ──────────────────────────────────
 	&__specs {
-		display: flex;
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		grid-template-rows: repeat(2, 1fr);
 		gap: 0;
 		padding: 0.85rem 1.25rem;
-		border-top: 1px solid $hpc-border;
-		background: #fafbfd;
 	}
 
 	&__spec {
 		display: flex;
+		flex-direction: column;
+		justify-content: center;
 		align-items: center;
-		gap: 0.35rem;
-		font-size: 0.75rem;
+		gap: 0.8rem;
+		font-size: 0.875rem;
 		color: $hpc-text-light;
 		padding: 0.15rem 0;
-		flex: 1 0 auto;
 		min-width: fit-content;
 		justify-content: center;
 
-		&:not(:last-child) {
+		&:not(:nth-child(3n)) {
 			border-right: 1px solid $hpc-border;
 			padding-right: 0.6rem;
 			margin-right: 0.6rem;
@@ -279,8 +298,8 @@ $hpc-transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 		flex-shrink: 0;
 
 		svg {
-			width: 14px;
-			height: 14px;
+			width: 22px;
+			height: auto;
 		}
 	}
 

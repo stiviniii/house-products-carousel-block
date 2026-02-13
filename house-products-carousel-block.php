@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       House Products Carousel Block
  * Description:       A modern Gutenberg block that displays WooCommerce products in a responsive SplideJS carousel with Secure Custom Fields specifications — perfect for real-estate style product cards.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Steven Ayo
@@ -26,7 +26,7 @@ if ( ! defined( 'HPC_PLUGIN_URL' ) ) {
 	define( 'HPC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 if ( ! defined( 'HPC_VERSION' ) ) {
-	define( 'HPC_VERSION', '1.0.0' );
+	define( 'HPC_VERSION', '1.0.1' );
 }
 
 /**
@@ -224,6 +224,8 @@ function render_block_output( $attributes ) {
 		'perPage'      => $columns,
 		'gap'          => '1.5rem',
 		'arrows'       => (bool) $attributes['showArrows'],
+		// 'arrowPath'    => 'M16 8l-1.41 1.41L18.17 13H4v2h14.17l-3.58 3.59L16 20l6-6-6-6z',
+		'arrowPath'    => 'M34.63,20.88l-11.25,11.25a1.25,1.25,0,0,1-1.77-1.77L30.73,21.25H6.25a1.25,1.25,0,0,1,0-2.5H30.73L21.62,9.63a1.25,1.25,0,0,1,1.77-1.77l11.25,11.25A1.25,1.25,0,0,1,34.63,20.88Z',
 		'pagination'   => false,
 		'autoplay'     => (bool) $attributes['autoplay'],
 		'interval'     => 4000,
@@ -361,19 +363,25 @@ function get_acf_specs( $product_id ) {
 	$specs  = array();
 	$fields = array(
 		'floors'    => array(
-			'label'  => __( 'Floors', 'house-products-carousel' ),
-			'icon'   => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
-			'suffix' => '',
+			'label'           => __( 'Floors', 'house-products-carousel' ),
+			'icon'            => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+			'suffix'          => '',
+			'suffix_singular' => ' Floor',
+			'suffix_plural'   => ' Floors',
 		),
 		'bedrooms'  => array(
-			'label'  => __( 'Bedrooms', 'house-products-carousel' ),
-			'icon'   => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v11a2 2 0 002 2h14a2 2 0 002-2V7"/><path d="M3 11h18"/><path d="M7 11V7a2 2 0 012-2h6a2 2 0 012 2v4"/></svg>',
-			'suffix' => '',
+			'label'           => __( 'Bedrooms', 'house-products-carousel' ),
+			'icon'            => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v11a2 2 0 002 2h14a2 2 0 002-2V7"/><path d="M3 11h18"/><path d="M7 11V7a2 2 0 012-2h6a2 2 0 012 2v4"/></svg>',
+			'suffix'          => '',
+			'suffix_singular' => ' Bedroom',
+			'suffix_plural'   => ' Bedrooms',
 		),
 		'bathrooms' => array(
-			'label'  => __( 'Bathrooms', 'house-products-carousel' ),
-			'icon'   => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16a1 1 0 011 1v3a4 4 0 01-4 4H7a4 4 0 01-4-4v-3a1 1 0 011-1z"/><path d="M6 12V5a2 2 0 012-2h0a2 2 0 012 2v1"/></svg>',
-			'suffix' => '',
+			'label'           => __( 'Bathrooms', 'house-products-carousel' ),
+			'icon'            => '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16a1 1 0 011 1v3a4 4 0 01-4 4H7a4 4 0 01-4-4v-3a1 1 0 011-1z"/><path d="M6 12V5a2 2 0 012-2h0a2 2 0 012 2v1"/></svg>',
+			'suffix'          => '',
+			'suffix_singular' => ' Bathroom',
+			'suffix_plural'   => ' Bathrooms',
 		),
 		'width'     => array(
 			'label'  => __( 'Width', 'house-products-carousel' ),
@@ -395,10 +403,18 @@ function get_acf_specs( $product_id ) {
 	foreach ( $fields as $key => $config ) {
 		$value = get_field( $key, $product_id );
 		if ( $value !== null && $value !== '' && $value !== false ) {
+			// Determine suffix: use singular/plural if available, otherwise static suffix.
+			if ( isset( $config['suffix_singular'], $config['suffix_plural'] ) ) {
+				$numeric_value = floatval( $value );
+				$suffix        = ( $numeric_value > 1 ) ? $config['suffix_plural'] : $config['suffix_singular'];
+			} else {
+				$suffix = $config['suffix'];
+			}
+
 			$specs[] = array(
 				'label' => $config['label'],
 				'icon'  => $config['icon'],
-				'value' => sanitize_text_field( $value ) . $config['suffix'],
+				'value' => sanitize_text_field( $value ) . $suffix,
 			);
 		}
 	}
