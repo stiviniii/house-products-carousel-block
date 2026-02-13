@@ -1,0 +1,63 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 3,
+    "name": "house-products/carousel",
+    "version": "1.0.0",
+    "title": "House Products Carousel",
+    "category": "widgets",
+    "icon": "store",
+    "description": "Display WooCommerce products in a modern carousel with ACF house specifications.",
+    "keywords": [
+        "products",
+        "carousel",
+        "woocommerce",
+        "house",
+        "real estate"
+    ],
+    "supports": {
+        "html": false,
+        "align": [
+            "wide",
+            "full"
+        ],
+        "spacing": {
+            "margin": true,
+            "padding": true
+        }
+    },
+    "textdomain": "house-products-carousel",
+    "attributes": {
+        "productsCount": {
+            "type": "number",
+            "default": 8
+        },
+        "columns": {
+            "type": "number",
+            "default": 3
+        },
+        "category": {
+            "type": "number",
+            "default": 0
+        },
+        "autoplay": {
+            "type": "boolean",
+            "default": false
+        },
+        "showArrows": {
+            "type": "boolean",
+            "default": true
+        },
+        "showRating": {
+            "type": "boolean",
+            "default": true
+        },
+        "orderBy": {
+            "type": "string",
+            "default": "date"
+        }
+    },
+    "editorScript": "file:./index.js",
+    "editorStyle": "file:./index.css",
+    "style": "file:./style-index.css",
+    "render": "file:./render.php"
+}
