@@ -1,11 +1,11 @@
 <?php
 /**
  * Plugin Name:       House Products Carousel Block
- * Description:       A modern Gutenberg block that displays WooCommerce products in a responsive SplideJS carousel with ACF specifications — perfect for real-estate style product cards.
+ * Description:       A modern Gutenberg block that displays WooCommerce products in a responsive SplideJS carousel with Secure Custom Fields specifications — perfect for real-estate style product cards.
  * Version:           1.0.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
- * Author:            Developer
+ * Author:            Steven Ayo
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       house-products-carousel
@@ -280,7 +280,7 @@ function render_product_card( $product_id, $attributes ) {
 	$rating_count = $product->get_rating_count();
 	$average      = (float) $product->get_average_rating();
 
-	// ACF fields.
+	// Secure Custom Fields (SCF) specs.
 	$acf_fields = get_acf_specs( $product_id );
 
 	ob_start();
@@ -346,7 +346,9 @@ function render_product_card( $product_id, $attributes ) {
 }
 
 /**
- * Get ACF specification fields for a product.
+ * Get Secure Custom Fields (SCF) specification fields for a product.
+ *
+ * Compatible with both SCF and ACF — both provide the get_field() function.
  *
  * @param int $product_id Product ID.
  * @return array Specs data.
