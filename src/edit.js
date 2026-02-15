@@ -220,6 +220,94 @@ export default function Edit({ attributes, setAttributes }) {
                             setAttributes({ showRating: value })
                         }
                     />
+                    <ToggleControl
+                        label={__(
+                            'Overflow Visible (Track)',
+                            'house-products-carousel'
+                        )}
+                        help={__(
+                            'Allow slides to spill outside the carousel track.',
+                            'house-products-carousel'
+                        )}
+                        checked={attributes.trackOverflowVisible}
+                        onChange={(value) =>
+                            setAttributes({
+                                trackOverflowVisible: value,
+                            })
+                        }
+                    />
+                    {attributes.trackOverflowVisible && (
+                        <div
+                            style={{
+                                color: '#d93025',
+                                fontSize: '12px',
+                                marginTop: '-10px',
+                                marginBottom: '15px',
+                                fontStyle: 'italic',
+                                fontWeight: '500',
+                                padding: '8px',
+                                borderLeft: '3px solid #d93025',
+                                backgroundColor: '#fce8e6',
+                            }}
+                        >
+                            {__(
+                                'Note: To avoid layout bleeding, ensure your section container has "overflow: hidden" applied.',
+                                'house-products-carousel'
+                            )}
+                        </div>
+                    )}
+                </PanelBody>
+                <PanelBody
+                    title={__(
+                        'Animation Settings',
+                        'house-products-carousel'
+                    )}
+                    initialOpen={false}
+                >
+                    <ToggleControl
+                        label={__(
+                            'Enable Reveal Animation',
+                            'house-products-carousel'
+                        )}
+                        checked={attributes.enableAnimation}
+                        onChange={(value) =>
+                            setAttributes({ enableAnimation: value })
+                        }
+                    />
+                    {attributes.enableAnimation && (
+                        <>
+                            <RangeControl
+                                label={__(
+                                    'Duration (ms)',
+                                    'house-products-carousel'
+                                )}
+                                value={attributes.animationDuration}
+                                onChange={(value) =>
+                                    setAttributes({
+                                        animationDuration: value,
+                                    })
+                                }
+                                min={200}
+                                max={2000}
+                                step={50}
+                            />
+                            <RangeControl
+                                label={__(
+                                    'Stagger Delay (ms)',
+                                    'house-products-carousel'
+                                )}
+                                value={attributes.animationStagger}
+                                onChange={(value) =>
+                                    setAttributes({
+                                        animationStagger: value,
+                                    })
+                                }
+                                min={0}
+                                max={500}
+                                step={10}
+                            />
+                        </>
+                    )}
                 </PanelBody>
             </InspectorControls>
 

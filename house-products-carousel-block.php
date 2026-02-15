@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       House Products Carousel Block
  * Description:       A modern Gutenberg block that displays WooCommerce products in a responsive SplideJS carousel with Secure Custom Fields specifications — perfect for real-estate style product cards.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Steven Ayo
@@ -26,7 +26,7 @@ if ( ! defined( 'HPC_PLUGIN_URL' ) ) {
 	define( 'HPC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 if ( ! defined( 'HPC_VERSION' ) ) {
-	define( 'HPC_VERSION', '1.0.1' );
+	define( 'HPC_VERSION', '1.0.2' );
 }
 
 /**
@@ -164,6 +164,10 @@ function render_block_output( $attributes ) {
 		'showArrows'    => true,
 		'showRating'    => true,
 		'orderBy'       => 'date',
+		'enableAnimation'   => true,
+		'animationDuration' => 800,
+		'animationStagger'  => 150,
+		'trackOverflowVisible' => false,
 	);
 
 	$attributes = wp_parse_args( $attributes, $defaults );
@@ -220,16 +224,17 @@ function render_block_output( $attributes ) {
 	$columns = max( 1, min( 6, absint( $attributes['columns'] ) ) );
 
 	$splide_options = wp_json_encode( array(
-		'type'         => 'loop',
+		'type'         => 'slide',
 		'perPage'      => $columns,
+		'perMove'      => 1,
 		'gap'          => '1.5rem',
 		'arrows'       => (bool) $attributes['showArrows'],
-		// 'arrowPath'    => 'M16 8l-1.41 1.41L18.17 13H4v2h14.17l-3.58 3.59L16 20l6-6-6-6z',
 		'arrowPath'    => 'M34.63,20.88l-11.25,11.25a1.25,1.25,0,0,1-1.77-1.77L30.73,21.25H6.25a1.25,1.25,0,0,1,0-2.5H30.73L21.62,9.63a1.25,1.25,0,0,1,1.77-1.77l11.25,11.25A1.25,1.25,0,0,1,34.63,20.88Z',
 		'pagination'   => false,
 		'autoplay'     => (bool) $attributes['autoplay'],
 		'interval'     => 4000,
 		'pauseOnHover' => true,
+		'rewind'       => false,
 		'breakpoints'  => array(
 			1200 => array( 'perPage' => $columns ),
 			768  => array( 'perPage' => 2 ),
@@ -237,9 +242,25 @@ function render_block_output( $attributes ) {
 		),
 	) );
 
+	$wrapper_classes = 'hpc-carousel-wrapper';
+	if ( (bool) $attributes['enableAnimation'] ) {
+		$wrapper_classes .= ' hpc-animate-reveal';
+	}
+	if ( (bool) $attributes['trackOverflowVisible'] ) {
+		$wrapper_classes .= ' hpc-track-overflow-visible';
+	}
+
+	$wrapper_style = sprintf(
+		'--hpc-anim-duration: %dms; --hpc-anim-stagger: %dms;',
+		absint( $attributes['animationDuration'] ),
+		absint( $attributes['animationStagger'] )
+	);
+
 	ob_start();
 	?>
-	<div class="hpc-carousel-wrapper" data-splide-options="<?php echo esc_attr( $splide_options ); ?>">
+	<div class="<?php echo esc_attr( $wrapper_classes ); ?>" 
+		 data-splide-options="<?php echo esc_attr( $splide_options ); ?>"
+		 style="<?php echo esc_attr( $wrapper_style ); ?>">
 		<div class="splide hpc-carousel" aria-label="<?php esc_attr_e( 'House Products Carousel', 'house-products-carousel' ); ?>">
 			<div class="splide__track">
 				<ul class="splide__list">
@@ -292,6 +313,11 @@ function render_product_card( $product_id, $attributes ) {
 			<a href="<?php echo esc_url( $permalink ); ?>" class="hpc-card__link" aria-label="<?php echo esc_attr( $title ); ?>">
 
 				<div class="hpc-card__image-wrapper">
+					<?php
+					$gallery_ids = $product->get_gallery_image_ids();
+					$hover_image_id = ! empty( $gallery_ids ) ? $gallery_ids[0] : null;
+					?>
+
 					<?php if ( $image_id ) : ?>
 						<?php
 						echo wp_get_attachment_image(
@@ -299,13 +325,28 @@ function render_product_card( $product_id, $attributes ) {
 							'medium_large',
 							false,
 							array(
-								'class'   => 'hpc-card__image',
-								'loading' => 'lazy',
+								'class'    => 'hpc-card__image hpc-card__image--featured',
+								'loading'  => 'lazy',
 								'decoding' => 'async',
-								'alt'     => esc_attr( $title ),
+								'alt'      => esc_attr( $title ),
 							)
 						);
 						?>
+						<?php if ( $hover_image_id ) : ?>
+							<?php
+							echo wp_get_attachment_image(
+								$hover_image_id,
+								'medium_large',
+								false,
+								array(
+									'class'    => 'hpc-card__image hpc-card__image--hover',
+									'loading'  => 'lazy',
+									'decoding' => 'async',
+									'alt'      => esc_attr( $title ),
+								)
+							);
+							?>
+						<?php endif; ?>
 					<?php else : ?>
 						<div class="hpc-card__image hpc-card__image--placeholder">
 							<span><?php esc_html_e( 'No Image', 'house-products-carousel' ); ?></span>

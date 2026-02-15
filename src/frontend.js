@@ -25,7 +25,26 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // Intersection Observer for scroll reveal animation
+    const revealObserver = new IntersectionObserver(
+        (entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-revealed');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        },
+        {
+            threshold: 0.1, // Trigger when 10% of the element is visible
+            rootMargin: '0px 0px -50px 0px', // Slightly before it fully enters
+        }
+    );
+
     wrappers.forEach((wrapper) => {
+        // Observe for reveal animation
+        revealObserver.observe(wrapper);
+
         const splideEl = wrapper.querySelector('.splide');
         if (!splideEl) {
             return;

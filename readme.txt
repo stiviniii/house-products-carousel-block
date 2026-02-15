@@ -4,7 +4,7 @@ Tags: woocommerce, gutenberg, carousel, products, block
 Requires at least: 6.4
 Tested up to: 6.7
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,6 +66,13 @@ The carousel will still display products with images, titles, prices, and rating
 Add a product tag with the slug `best-seller` to any WooCommerce product. The badge will appear automatically on those products.
 
 == Changelog ==
+
+= 1.0.2 =
+* Add staggered reveal animation when the carousel enters the viewport.
+* Add block settings to enable/disable animation and control duration/stagger.
+* Add "Overflow Visible" setting for the carousel track with layout warning.
+* Improve card design with better shadow and radius variables.
+* Add support for --base-3 background color variable in cards.
 
 = 1.0.1 =
 * Update Splide arrows to modern icons.
