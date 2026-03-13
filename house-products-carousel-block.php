@@ -59,8 +59,13 @@ add_action( 'init', __NAMESPACE__ . '\\register_block' );
 /**
  * Enqueue Splide JS and CSS on the frontend only when the block is present.
  */
-function enqueue_frontend_assets() {
-	if ( ! has_block( 'house-products/carousel' ) ) {
+/**
+ * Enqueue Splide JS and CSS on the frontend.
+ *
+ * @param bool $force Whether to force enqueue regardless of has_block() check.
+ */
+function enqueue_frontend_assets( $force = false ) {
+	if ( ! $force && ! has_block( 'house-products/carousel' ) ) {
 		return;
 	}
 
@@ -171,6 +176,9 @@ function render_block_output( $attributes ) {
 	if ( ! class_exists( 'WooCommerce' ) ) {
 		return '<p>' . esc_html__( 'WooCommerce is required for this block.', 'house-products-carousel' ) . '</p>';
 	}
+
+	// Ensure assets are enqueued (important for widgets where has_block fails).
+	enqueue_frontend_assets( true );
 
 	$defaults = array(
 		'productsCount' => 8,
