@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       House Products Carousel Block
  * Description:       A modern Gutenberg block that displays WooCommerce products in a responsive SplideJS carousel with Secure Custom Fields specifications — perfect for real-estate style product cards.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Steven Ayo
@@ -26,7 +26,7 @@ if ( ! defined( 'HPC_PLUGIN_URL' ) ) {
 	define( 'HPC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 if ( ! defined( 'HPC_VERSION' ) ) {
-	define( 'HPC_VERSION', '1.0.2' );
+	define( 'HPC_VERSION', '1.0.3' );
 }
 
 /**
@@ -179,6 +179,9 @@ function render_block_output( $attributes ) {
 
 	// Ensure assets are enqueued (important for widgets where has_block fails).
 	enqueue_frontend_assets( true );
+
+	// Signal to House Product Card Override to load its icons/sprite in the footer.
+	add_filter( 'hpco_should_load_assets', '__return_true' );
 
 	$defaults = array(
 		'productsCount' => 8,
