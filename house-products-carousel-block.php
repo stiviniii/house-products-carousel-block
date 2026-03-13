@@ -105,6 +105,22 @@ function enqueue_frontend_assets() {
 			true
 		);
 	}
+
+	/**
+	 * Explicitly enqueue House Product Card Override assets if the plugin is active.
+	 * This acts as a safety measure to ensure styles and Quick Buy functionality work in the carousel.
+	 */
+	if ( defined( 'HPCO_PLUGIN_URL' ) && defined( 'HPCO_VERSION' ) ) {
+		$hpco_enabled = get_option( 'hpco_enable_override', 'yes' );
+		if ( apply_filters( 'hpco_enable_override', ( 'yes' === $hpco_enabled ) ) ) {
+			wp_enqueue_style( 'hpco-product-card', HPCO_PLUGIN_URL . 'assets/css/product-card.css', array(), HPCO_VERSION );
+			wp_enqueue_script( 'hpco-quick-buy', HPCO_PLUGIN_URL . 'assets/js/quick-buy.js', array( 'jquery' ), HPCO_VERSION, true );
+			wp_localize_script( 'hpco-quick-buy', 'hpcoData', array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( 'hpco-quick-buy-nonce' ),
+			) );
+		}
+	}
 }
 add_action( 'wp_enqueue_scripts', __NAMESPACE__ . '\\enqueue_frontend_assets' );
 
@@ -227,7 +243,7 @@ function render_block_output( $attributes ) {
 		'type'         => 'slide',
 		'perPage'      => $columns,
 		'perMove'      => 1,
-		'gap'          => '1.5rem',
+		'gap'          => '1.25rem',
 		'arrows'       => (bool) $attributes['showArrows'],
 		'arrowPath'    => 'M34.63,20.88l-11.25,11.25a1.25,1.25,0,0,1-1.77-1.77L30.73,21.25H6.25a1.25,1.25,0,0,1,0-2.5H30.73L21.62,9.63a1.25,1.25,0,0,1,1.77-1.77l11.25,11.25A1.25,1.25,0,0,1,34.63,20.88Z',
 		'pagination'   => false,
@@ -285,104 +301,131 @@ function render_block_output( $attributes ) {
  * @return string Card HTML.
  */
 function render_product_card( $product_id, $attributes ) {
-	$product = wc_get_product( $product_id );
-	if ( ! $product ) {
+	$product_obj = wc_get_product( $product_id );
+	if ( ! $product_obj ) {
 		return '';
 	}
-
-	$title     = $product->get_name();
-	$price     = $product->get_price_html();
-	$permalink = $product->get_permalink();
-	$image_id  = $product->get_image_id();
-
-	// Check for "best-seller" tag.
-	$tags          = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'slugs' ) );
-	$is_bestseller = is_array( $tags ) && in_array( 'best-seller', $tags, true );
-
-	// Rating.
-	$rating_count = $product->get_rating_count();
-	$average      = (float) $product->get_average_rating();
-
-	// Secure Custom Fields (SCF) specs.
-	$acf_fields = get_acf_specs( $product_id );
 
 	ob_start();
 	?>
 	<li class="splide__slide">
-		<article class="hpc-card">
-			<a href="<?php echo esc_url( $permalink ); ?>" class="hpc-card__link" aria-label="<?php echo esc_attr( $title ); ?>">
+		<?php
+		/**
+		 * Check if the House Product Card Override plugin is active and enabled.
+		 * If so, use the standard WooCommerce hook that HPCO uses to render the card.
+		 */
+		$hpco_enabled = defined( 'HPCO_VERSION' ) && ( get_option( 'hpco_enable_override', 'yes' ) === 'yes' );
+		$rendered     = false;
 
-				<div class="hpc-card__image-wrapper">
-					<?php
-					$gallery_ids = $product->get_gallery_image_ids();
-					$hover_image_id = ! empty( $gallery_ids ) ? $gallery_ids[0] : null;
-					?>
+		if ( $hpco_enabled ) {
+			global $product;
+			$old_product = $product;
+			$product     = $product_obj;
 
-					<?php if ( $image_id ) : ?>
+			// Capture output from the override hook.
+			ob_start();
+			do_action( 'woocommerce_before_shop_loop_item' );
+			$override_html = ob_get_clean();
+
+			if ( ! empty( trim( $override_html ) ) ) {
+				echo $override_html;
+				$rendered = true;
+			}
+
+			// Restore global product.
+			$product = $old_product;
+		}
+
+		if ( ! $rendered ) :
+			// Fallback to internal card design (Original Carousel Design)
+			$title     = $product_obj->get_name();
+			$price     = $product_obj->get_price_html();
+			$permalink = $product_obj->get_permalink();
+			$image_id  = $product_obj->get_image_id();
+
+			$tags          = wp_get_post_terms( $product_id, 'product_tag', array( 'fields' => 'slugs' ) );
+			$is_bestseller = is_array( $tags ) && in_array( 'best-seller', $tags, true );
+
+			$rating_count = $product_obj->get_rating_count();
+			$average      = (float) $product_obj->get_average_rating();
+
+			$acf_fields = get_acf_specs( $product_id );
+			?>
+			<article class="hpc-card">
+				<a href="<?php echo esc_url( $permalink ); ?>" class="hpc-card__link" aria-label="<?php echo esc_attr( $title ); ?>">
+
+					<div class="hpc-card__image-wrapper">
 						<?php
-						echo wp_get_attachment_image(
-							$image_id,
-							'medium_large',
-							false,
-							array(
-								'class'    => 'hpc-card__image hpc-card__image--featured',
-								'loading'  => 'lazy',
-								'decoding' => 'async',
-								'alt'      => esc_attr( $title ),
-							)
-						);
+						$gallery_ids    = $product_obj->get_gallery_image_ids();
+						$hover_image_id = ! empty( $gallery_ids ) ? $gallery_ids[0] : null;
 						?>
-						<?php if ( $hover_image_id ) : ?>
+
+						<?php if ( $image_id ) : ?>
 							<?php
 							echo wp_get_attachment_image(
-								$hover_image_id,
+								$image_id,
 								'medium_large',
 								false,
 								array(
-									'class'    => 'hpc-card__image hpc-card__image--hover',
+									'class'    => 'hpc-card__image hpc-card__image--featured',
 									'loading'  => 'lazy',
 									'decoding' => 'async',
 									'alt'      => esc_attr( $title ),
 								)
 							);
 							?>
-						<?php endif; ?>
-					<?php else : ?>
-						<div class="hpc-card__image hpc-card__image--placeholder">
-							<span><?php esc_html_e( 'No Image', 'house-products-carousel' ); ?></span>
-						</div>
-					<?php endif; ?>
-
-					<?php if ( $is_bestseller ) : ?>
-						<span class="hpc-card__badge"><?php esc_html_e( 'Best Seller', 'house-products-carousel' ); ?></span>
-					<?php endif; ?>
-				</div>
-
-				<div class="hpc-card__body">
-					<h3 class="hpc-card__title"><?php echo esc_html( $title ); ?></h3>
-					<div class="hpc-card__price"><?php echo wp_kses_post( $price ); ?></div>
-
-					<?php if ( $attributes['showRating'] && $rating_count > 0 ) : ?>
-						<div class="hpc-card__rating" aria-label="<?php printf( esc_attr__( 'Rated %s out of 5', 'house-products-carousel' ), esc_attr( number_format( $average, 1 ) ) ); ?>">
-							<?php echo render_stars( $average, $product_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- contains safe SVG output. ?>
-							<span class="hpc-card__rating-count">(<?php echo esc_html( $rating_count ); ?>)</span>
-						</div>
-					<?php endif; ?>
-				</div>
-
-				<?php if ( ! empty( $acf_fields ) ) : ?>
-					<div class="hpc-card__specs">
-						<?php foreach ( $acf_fields as $spec ) : ?>
-							<div class="hpc-card__spec" title="<?php echo esc_attr( $spec['label'] ); ?>">
-								<span class="hpc-card__spec-icon"><?php echo $spec['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- hardcoded SVG icons. ?></span>
-								<span class="hpc-card__spec-value"><?php echo esc_html( $spec['value'] ); ?></span>
+							<?php if ( $hover_image_id ) : ?>
+								<?php
+								echo wp_get_attachment_image(
+									$hover_image_id,
+									'medium_large',
+									false,
+									array(
+										'class'    => 'hpc-card__image hpc-card__image--hover',
+										'loading'  => 'lazy',
+										'decoding' => 'async',
+										'alt'      => esc_attr( $title ),
+									)
+								);
+								?>
+							<?php endif; ?>
+						<?php else : ?>
+							<div class="hpc-card__image hpc-card__image--placeholder">
+								<span><?php esc_html_e( 'No Image', 'house-products-carousel' ); ?></span>
 							</div>
-						<?php endforeach; ?>
-					</div>
-				<?php endif; ?>
+						<?php endif; ?>
 
-			</a>
-		</article>
+						<?php if ( $is_bestseller ) : ?>
+							<span class="hpc-card__badge"><?php esc_html_e( 'Best Seller', 'house-products-carousel' ); ?></span>
+						<?php endif; ?>
+					</div>
+
+					<div class="hpc-card__body">
+						<h3 class="hpc-card__title"><?php echo esc_html( $title ); ?></h3>
+						<div class="hpc-card__price"><?php echo wp_kses_post( $price ); ?></div>
+
+						<?php if ( $attributes['showRating'] && $rating_count > 0 ) : ?>
+							<div class="hpc-card__rating" aria-label="<?php printf( esc_attr__( 'Rated %s out of 5', 'house-products-carousel' ), esc_attr( number_format( $average, 1 ) ) ); ?>">
+								<?php echo render_stars( $average, $product_id ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+								<span class="hpc-card__rating-count">(<?php echo esc_html( $rating_count ); ?>)</span>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<?php if ( ! empty( $acf_fields ) ) : ?>
+						<div class="hpc-card__specs">
+							<?php foreach ( $acf_fields as $spec ) : ?>
+								<div class="hpc-card__spec" title="<?php echo esc_attr( $spec['label'] ); ?>">
+									<span class="hpc-card__spec-icon"><?php echo $spec['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+									<span class="hpc-card__spec-value"><?php echo esc_html( $spec['value'] ); ?></span>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+
+				</a>
+			</article>
+		<?php endif; ?>
 	</li>
 	<?php
 	return ob_get_clean();
