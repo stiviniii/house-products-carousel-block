@@ -11,17 +11,12 @@
 /* global Splide */
 
 document.addEventListener('DOMContentLoaded', () => {
-    const wrappers = document.querySelectorAll('.hpc-carousel-wrapper');
+    // Both carousel and grid use this class for animations.
+    const revealWrappers = document.querySelectorAll('.hpc-animate-reveal');
+    // For Splide initialization, we specifically need the carousel wrappers.
+    const carouselWrappers = document.querySelectorAll('.hpc-carousel-wrapper');
 
-    if (!wrappers.length) {
-        return;
-    }
-
-    if (typeof Splide === 'undefined') {
-        // eslint-disable-next-line no-console
-        console.warn(
-            'House Products Carousel: Splide library not loaded. Carousel will not initialize.'
-        );
+    if (!revealWrappers.length && !carouselWrappers.length) {
         return;
     }
 
@@ -36,17 +31,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
         {
-            threshold: 0.1, // Trigger when 10% of the element is visible
-            rootMargin: '0px 0px -50px 0px', // Slightly before it fully enters
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px',
         }
     );
 
-    wrappers.forEach((wrapper) => {
-        // Observe for reveal animation
+    // Observe all revealable elements
+    revealWrappers.forEach((wrapper) => {
         revealObserver.observe(wrapper);
+    });
 
+    // Initialize Splide for carousels
+    carouselWrappers.forEach((wrapper) => {
         const splideEl = wrapper.querySelector('.splide');
         if (!splideEl) {
+            return;
+        }
+
+        if (typeof Splide === 'undefined') {
+            console.warn('House Products Carousel: Splide library not loaded.');
             return;
         }
 
@@ -62,22 +65,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 options = JSON.parse(raw);
             }
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.warn(
-                'House Products Carousel: Invalid Splide options JSON.',
-                e
-            );
+            console.warn('House Products Carousel: Invalid Splide options JSON.', e);
         }
 
         try {
             const splide = new Splide(splideEl, options);
             splide.mount();
         } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error(
-                'House Products Carousel: Failed to initialize Splide.',
-                e
-            );
+            console.error('House Products Carousel: Failed to initialize Splide.', e);
         }
     });
 });
+

@@ -1,15 +1,15 @@
 {
     "$schema": "https://schemas.wp.org/trunk/block.json",
     "apiVersion": 3,
-    "name": "house-products/carousel",
-    "version": "1.0.2",
-    "title": "House Products Carousel",
+    "name": "house-products/grid",
+    "version": "1.1.0",
+    "title": "House Products Grid",
     "category": "widgets",
-    "icon": "store",
-    "description": "Display WooCommerce products in a modern carousel with Secure Custom Fields house specifications.",
+    "icon": "grid-view",
+    "description": "Display WooCommerce products in a modern grid layout with Secure Custom Fields house specifications.",
     "keywords": [
         "products",
-        "carousel",
+        "grid",
         "woocommerce",
         "house",
         "real estate"
@@ -39,13 +39,9 @@
             "type": "number",
             "default": 0
         },
-        "autoplay": {
-            "type": "boolean",
-            "default": false
-        },
-        "showArrows": {
-            "type": "boolean",
-            "default": true
+        "excludeCategories": {
+            "type": "array",
+            "default": []
         },
         "showRating": {
             "type": "boolean",
@@ -66,10 +62,6 @@
         "animationStagger": {
             "type": "number",
             "default": 150
-        },
-        "trackOverflowVisible": {
-            "type": "boolean",
-            "default": false
         }
     },
     "editorScript": "file:./index.js",

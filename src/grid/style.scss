@@ -1,0 +1,37 @@
+/**
+ * House Products Grid — Layout Styles
+ */
+
+@import "../common/card-styles.scss";
+
+.hpc-grid-wrapper {
+	position: relative;
+	width: 100%;
+	padding: 1rem 0;
+}
+
+.hpc-grid {
+	display: grid;
+	grid-template-columns: repeat(var(--hpc-columns, 3), 1fr);
+	gap: 1.5rem;
+	width: 100%;
+
+	&__item {
+		width: 100%;
+		height: 100%;
+	}
+}
+
+// ─── Responsive Grid ────────────────────────────────
+@media (max-width: 1024px) {
+	.hpc-grid {
+		grid-template-columns: repeat(min(var(--hpc-columns, 3), 2), 1fr);
+	}
+}
+
+@media (max-width: 600px) {
+	.hpc-grid {
+		grid-template-columns: 1fr;
+		gap: 1.25rem;
+	}
+}

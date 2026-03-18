@@ -1,0 +1,117 @@
+/**
+ * House Products Grid — Editor Component
+ */
+
+import { __ } from '@wordpress/i18n';
+import { useBlockProps, InspectorControls } from '@wordpress/block-editor';
+import { Placeholder, Spinner } from '@wordpress/components';
+import { useSelect } from '@wordpress/data';
+import { decodeEntities } from '@wordpress/html-entities';
+import InspectorFields from '../common/InspectorFields';
+
+export default function Edit({ attributes, setAttributes }) {
+    const {
+        productsCount,
+        columns,
+        category,
+        excludeCategories,
+        orderBy,
+    } = attributes;
+
+    const blockProps = useBlockProps({
+        className: 'hpc-editor-wrapper',
+    });
+
+    // Fetch products for preview.
+    const products = useSelect(
+        (select) => {
+            const { getEntityRecords } = select('core');
+            const query = {
+                per_page: productsCount,
+                status: 'publish',
+                orderby: orderBy === 'menu_order' ? 'menu_order' : orderBy,
+                order: 'desc',
+            };
+            if (category > 0) {
+                query.product_cat = category;
+            }
+            if (excludeCategories && excludeCategories.length > 0) {
+                query.product_cat_exclude = excludeCategories;
+            }
+            return getEntityRecords('postType', 'product', query);
+        },
+        [productsCount, category, excludeCategories, orderBy]
+    );
+
+    return (
+        <div {...blockProps}>
+            <InspectorControls>
+                <InspectorFields 
+                    attributes={attributes} 
+                    setAttributes={setAttributes} 
+                    isCarousel={false} 
+                />
+            </InspectorControls>
+
+            <div className="hpc-editor-preview">
+                <div className="hpc-editor-preview__header">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <rect x="3" y="3" width="7" height="7" />
+                        <rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" />
+                        <rect x="3" y="14" width="7" height="7" />
+                    </svg>
+                    <span>{__('House Products Grid', 'house-products-carousel')}</span>
+                </div>
+
+                {products === null ? (
+                    <div className="hpc-editor-preview__loading">
+                        <Spinner />
+                        <span>{__('Loading products…', 'house-products-carousel')}</span>
+                    </div>
+                ) : products.length > 0 ? (
+                    <div className="hpc-editor-preview__grid hpc-editor-preview__grid--grid-layout" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
+                        {products.map((product) => (
+                            <div key={product.id} className="hpc-editor-preview__card">
+                                {product.featured_media ? (
+                                    <ProductImage mediaId={product.featured_media} />
+                                ) : (
+                                    <div className="hpc-editor-preview__card-img hpc-editor-preview__card-img--placeholder">
+                                        <span>{__('No Image', 'house-products-carousel')}</span>
+                                    </div>
+                                )}
+                                <div className="hpc-editor-preview__card-body">
+                                    <h4 className="hpc-editor-preview__card-title">
+                                        {decodeEntities(product.title.rendered)}
+                                    </h4>
+                                    <div className="hpc-editor-preview__card-meta">
+                                        {__('Grid Layout', 'house-products-carousel')}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <Placeholder
+                        icon="grid-view"
+                        label={__('House Products Grid', 'house-products-carousel')}
+                        instructions={__('No products found. Please check your settings.', 'house-products-carousel')}
+                    />
+                )}
+
+                <div className="hpc-editor-preview__info">
+                    <span>
+                        {productsCount} {__('products', 'house-products-carousel')} · {columns} {__('columns', 'house-products-carousel')}
+                    </span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ProductImage({ mediaId }) {
+    const media = useSelect((select) => select('core').getMedia(mediaId), [mediaId]);
+    if (!media) return <div className="hpc-editor-preview__card-img hpc-editor-preview__card-img--loading"><Spinner /></div>;
+    const src = media?.media_details?.sizes?.medium?.source_url || media?.source_url;
+    return <div className="hpc-editor-preview__card-img"><img src={src} alt={media.alt_text || ''} loading="lazy" /></div>;
+}

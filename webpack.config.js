@@ -12,6 +12,6 @@ module.exports = {
     ...defaultConfig,
     entry: {
         ...defaultConfig.entry(),
-        frontend: path.resolve(__dirname, 'src', 'frontend.js'),
+        'carousel/frontend': path.resolve(__dirname, 'src', 'carousel', 'frontend.js'),
     },
 };
