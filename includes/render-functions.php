@@ -10,6 +10,34 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
+ * Get common Splide options.
+ *
+ * @param int   $columns    Number of columns.
+ * @param array $attributes Block attributes.
+ * @return array Splide options array.
+ */
+function get_common_splide_options( $columns, $attributes ) {
+	return array(
+		'type'         => 'slide',
+		'perPage'      => $columns,
+		'perMove'      => 1,
+		'gap'          => '1.5rem',
+		'arrows'       => (bool) ( $attributes['showArrows'] ?? true ),
+		'arrowPath'    => 'M34.63,20.88l-11.25,11.25a1.25,1.25,0,0,1-1.77-1.77L30.73,21.25H6.25a1.25,1.25,0,0,1,0-2.5H30.73L21.62,9.63a1.25,1.25,0,0,1,1.77-1.77l11.25,11.25A1.25,1.25,0,0,1,34.63,20.88Z',
+		'pagination'   => false,
+		'autoplay'     => (bool) ( $attributes['autoplay'] ?? false ),
+		'interval'     => 4000,
+		'pauseOnHover' => true,
+		'rewind'       => false,
+		'breakpoints'  => array(
+			1200 => array( 'perPage' => $columns ),
+			768  => array( 'perPage' => 2 ),
+			480  => array( 'perPage' => 1 ),
+		),
+	);
+}
+
+/**
  * Get product IDs based on block attributes.
  *
  * @param array $attributes Block attributes.
@@ -102,6 +130,121 @@ function get_product_ids( $attributes ) {
 	}
 
 	return get_posts( $query_args );
+}
+
+/**
+ * Render Category Carousel Block Output
+ *
+ * @param array $attributes Block attributes.
+ * @return string Block HTML.
+ */
+function render_category_carousel_output( $attributes ) {
+	$category_ids = ! empty( $attributes['categoryIds'] ) ? $attributes['categoryIds'] : array();
+
+	if ( empty( $category_ids ) ) {
+		return '<div class="hpc-no-products">' . esc_html__( 'No categories selected.', 'house-products-carousel' ) . '</div>';
+	}
+
+	$columns = max( 1, min( 6, absint( $attributes['columns'] ?? 3 ) ) );
+	$splide_options = wp_json_encode( get_common_splide_options( $columns, $attributes ) );
+
+	$wrapper_classes = 'hpc-carousel-wrapper hpc-categories-carousel-wrapper';
+	if ( (bool) ( $attributes['enableAnimation'] ?? true ) ) {
+		$wrapper_classes .= ' hpc-animate-reveal';
+	}
+	if ( (bool) ( $attributes['trackOverflowVisible'] ?? false ) ) {
+		$wrapper_classes .= ' hpc-track-overflow-visible';
+	}
+
+	$wrapper_style = sprintf(
+		'--hpc-anim-duration: %dms; --hpc-anim-stagger: %dms;',
+		absint( $attributes['animationDuration'] ?? 800 ),
+		absint( $attributes['animationStagger'] ?? 150 )
+	);
+
+	ob_start();
+	?>
+	<div class="<?php echo esc_attr( $wrapper_classes ); ?>" 
+		 data-splide-options="<?php echo esc_attr( $splide_options ); ?>"
+		 style="<?php echo esc_attr( $wrapper_style ); ?>">
+		<div class="splide hpc-carousel" aria-label="<?php esc_attr_e( 'House Categories Carousel', 'house-products-carousel' ); ?>">
+			<div class="splide__track">
+				<ul class="splide__list">
+					<?php foreach ( $category_ids as $cat_id ) : ?>
+						<li class="splide__slide">
+							<?php echo render_category_card( absint( $cat_id ), $attributes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</li>
+					<?php endforeach; ?>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<?php
+	return ob_get_clean();
+}
+
+/**
+ * Render a single category card.
+ *
+ * @param int   $cat_id     Category ID.
+ * @param array $attributes Block attributes.
+ * @return string Card HTML.
+ */
+function render_category_card( $cat_id, $attributes ) {
+	$category = get_term( $cat_id, 'product_cat' );
+	if ( ! $category || is_wp_error( $category ) ) {
+		return '';
+	}
+
+	$thumbnail_id = get_term_meta( $cat_id, 'thumbnail_id', true );
+	$image_url    = '';
+	
+	if ( $thumbnail_id ) {
+		$image_url = wp_get_attachment_image_url( $thumbnail_id, 'medium_large' );
+	}
+	
+	// Fallback to WooCommerce placeholder if no image found
+	if ( ! $image_url ) {
+		if ( function_exists( 'wc_placeholder_img_src' ) ) {
+			$image_url = wc_placeholder_img_src();
+		} else {
+			// Ultimate fallback - use a data URI placeholder
+			$image_url = 'data:image/svg+xml;base64,' . base64_encode(
+				'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300" fill="#f0f0f0">
+					<rect width="300" height="300" fill="#f8f8f8"/>
+					<text x="150" y="150" text-anchor="middle" dy="0.3em" font-family="Arial, sans-serif" font-size="14" fill="#999">No Image</text>
+				</svg>'
+			);
+		}
+	}
+	$link         = get_term_link( $category );
+	$name         = $category->name;
+	$count        = $category->count;
+	$show_count   = (bool) ( $attributes['showProductCount'] ?? true );
+
+	ob_start();
+	?>
+	<div class="hpc-category-card">
+		<a href="<?php echo esc_url( $link ); ?>" class="hpc-category-card__link">
+			<div class="hpc-category-card__image-wrapper">
+				<img src="<?php echo esc_url( $image_url ); ?>" 
+					 alt="<?php echo esc_attr( $name ); ?>" 
+					 class="hpc-category-card__image"
+					 loading="lazy">
+				<div class="hpc-category-card__overlay"></div>
+				<div class="hpc-category-card__content">
+					<h3 class="hpc-category-card__title"><?php echo esc_html( $name ); ?></h3>
+					<?php if ( $show_count ) : ?>
+						<span class="hpc-category-card__count">
+							<?php printf( esc_html( _n( '%s Product', '%s Products', $count, 'house-products-carousel' ) ), number_format_i18n( $count ) ); ?>
+						</span>
+					<?php endif; ?>
+				</div>
+			</div>
+		</a>
+	</div>
+	<?php
+	return ob_get_clean();
 }
 
 /**
@@ -346,25 +489,7 @@ function render_stars( $rating, $product_id = 0 ) {
  */
 function render_carousel_layout( $product_ids, $attributes ) {
 	$columns = max( 1, min( 6, absint( $attributes['columns'] ?? 3 ) ) );
-
-	$splide_options = wp_json_encode( array(
-		'type'         => 'slide',
-		'perPage'      => $columns,
-		'perMove'      => 1,
-		'gap'          => '1.25rem',
-		'arrows'       => (bool) ( $attributes['showArrows'] ?? true ),
-		'arrowPath'    => 'M34.63,20.88l-11.25,11.25a1.25,1.25,0,0,1-1.77-1.77L30.73,21.25H6.25a1.25,1.25,0,0,1,0-2.5H30.73L21.62,9.63a1.25,1.25,0,0,1,1.77-1.77l11.25,11.25A1.25,1.25,0,0,1,34.63,20.88Z',
-		'pagination'   => false,
-		'autoplay'     => (bool) ( $attributes['autoplay'] ?? false ),
-		'interval'     => 4000,
-		'pauseOnHover' => true,
-		'rewind'       => false,
-		'breakpoints'  => array(
-			1200 => array( 'perPage' => $columns ),
-			768  => array( 'perPage' => 2 ),
-			480  => array( 'perPage' => 1 ),
-		),
-	) );
+	$splide_options = wp_json_encode( get_common_splide_options( $columns, $attributes ) );
 
 	$wrapper_classes = 'hpc-carousel-wrapper';
 	if ( (bool) ( $attributes['enableAnimation'] ?? true ) ) {

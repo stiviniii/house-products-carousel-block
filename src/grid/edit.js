@@ -31,6 +31,7 @@ export default function Edit({ attributes, setAttributes }) {
                 status: 'publish',
                 orderby: orderBy === 'menu_order' ? 'menu_order' : orderBy,
                 order: 'desc',
+                _embed: true,
             };
             if (category > 0) {
                 query.product_cat = category;
@@ -71,25 +72,32 @@ export default function Edit({ attributes, setAttributes }) {
                     </div>
                 ) : products.length > 0 ? (
                     <div className="hpc-editor-preview__grid hpc-editor-preview__grid--grid-layout" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
-                        {products.map((product) => (
-                            <div key={product.id} className="hpc-editor-preview__card">
-                                {product.featured_media ? (
-                                    <ProductImage mediaId={product.featured_media} />
-                                ) : (
-                                    <div className="hpc-editor-preview__card-img hpc-editor-preview__card-img--placeholder">
-                                        <span>{__('No Image', 'house-products-carousel')}</span>
-                                    </div>
-                                )}
-                                <div className="hpc-editor-preview__card-body">
-                                    <h4 className="hpc-editor-preview__card-title">
-                                        {decodeEntities(product.title.rendered)}
-                                    </h4>
-                                    <div className="hpc-editor-preview__card-meta">
-                                        {__('Grid Layout', 'house-products-carousel')}
+                        {products.map((product) => {
+                            const featuredMedia = product._embedded?.['wp:featuredmedia']?.[0];
+                            const imageUrl = featuredMedia?.media_details?.sizes?.medium?.source_url || featuredMedia?.source_url;
+
+                            return (
+                                <div key={product.id} className="hpc-editor-preview__card">
+                                    {imageUrl ? (
+                                        <div className="hpc-editor-preview__card-img">
+                                            <img src={imageUrl} alt={decodeEntities(product.title.rendered)} loading="lazy" />
+                                        </div>
+                                    ) : (
+                                        <div className="hpc-editor-preview__card-img hpc-editor-preview__card-img--placeholder">
+                                            <span>{__('No Image', 'house-products-carousel')}</span>
+                                        </div>
+                                    )}
+                                    <div className="hpc-editor-preview__card-body">
+                                        <h4 className="hpc-editor-preview__card-title">
+                                            {decodeEntities(product.title.rendered)}
+                                        </h4>
+                                        <div className="hpc-editor-preview__card-meta">
+                                            {__('Grid Layout', 'house-products-carousel')}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <Placeholder
@@ -107,11 +115,4 @@ export default function Edit({ attributes, setAttributes }) {
             </div>
         </div>
     );
-}
-
-function ProductImage({ mediaId }) {
-    const media = useSelect((select) => select('core').getMedia(mediaId), [mediaId]);
-    if (!media) return <div className="hpc-editor-preview__card-img hpc-editor-preview__card-img--loading"><Spinner /></div>;
-    const src = media?.media_details?.sizes?.medium?.source_url || media?.source_url;
-    return <div className="hpc-editor-preview__card-img"><img src={src} alt={media.alt_text || ''} loading="lazy" /></div>;
 }

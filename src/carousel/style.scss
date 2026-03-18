@@ -14,9 +14,6 @@
 // ─── Splide Overrides ───────────────────────────────
 .hpc-carousel {
 
-	&.splide {
-		padding: 0.5rem 0;
-	}
 
 	.splide__arrows {
 		position: absolute;
@@ -43,9 +40,6 @@
 		padding: 0;
 	}
 
-	.splide__slide {
-		padding: 0 0.625rem; // Half of 1.25rem gap
-	}
 
 	// Nav arrows
 	.splide__arrow {
@@ -107,8 +101,13 @@
 			width: 36px;
 			height: 36px;
 
-			&--prev { left: -8px; }
-			&--next { right: -8px; }
+			&--prev {
+				left: -8px;
+			}
+
+			&--next {
+				right: -8px;
+			}
 		}
 	}
 }
@@ -119,9 +118,18 @@
 			width: 32px;
 			height: 32px;
 
-			svg { width: 14px; height: 14px; }
-			&--prev { left: 4px; }
-			&--next { right: 4px; }
+			svg {
+				width: 14px;
+				height: 14px;
+			}
+
+			&--prev {
+				left: 4px;
+			}
+
+			&--next {
+				right: 4px;
+			}
 		}
 	}
 }

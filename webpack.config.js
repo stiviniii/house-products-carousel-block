@@ -12,6 +12,6 @@ module.exports = {
     ...defaultConfig,
     entry: {
         ...defaultConfig.entry(),
-        'carousel/frontend': path.resolve(__dirname, 'src', 'carousel', 'frontend.js'),
+        'hpc-frontend': path.resolve(__dirname, 'src', 'common', 'frontend.js'),
     },
 };

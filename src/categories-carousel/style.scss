@@ -1,0 +1,152 @@
+/**
+ * House Categories Carousel — Layout Styles
+ */
+
+@import "../common/card-styles.scss";
+
+// ─── Category Card ──────────────────────────────────
+.hpc-category-card {
+	position: relative;
+	height: 100%;
+	border-radius: $hpc-radius;
+	overflow: hidden;
+	background: $hpc-primary;
+
+	&__link {
+		display: block;
+		height: 100%;
+		text-decoration: none !important;
+		color: #fff !important;
+
+		&:focus-visible {
+			outline: 2px solid $hpc-accent;
+			outline-offset: -2px;
+		}
+	}
+
+	&__image-wrapper {
+		position: relative;
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		overflow: hidden;
+	}
+
+	&__image {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	&__overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(to top,
+				rgba(0, 0, 0, 0.8) 0%,
+				rgba(0, 0, 0, 0.3) 50%,
+				rgba(0, 0, 0, 0.1) 100%);
+		z-index: 1;
+		transition: background 0.35s ease;
+	}
+
+	&__content {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		width: 100%;
+		padding: 1.5rem;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		text-align: center;
+	}
+
+	&__title {
+		margin: 0 !important;
+		font-size: 1.25rem !important;
+		font-weight: 700 !important;
+		line-height: 1.2 !important;
+		color: #fff !important;
+		text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+	}
+
+	&__count {
+		font-size: 0.85rem;
+		opacity: 0.9;
+		font-weight: 500;
+		background: rgba(255, 255, 255, 0.15);
+		backdrop-filter: blur(4px);
+		padding: 2px 10px;
+		border-radius: 20px;
+		width: fit-content;
+		margin: 0 auto;
+	}
+
+	// ─── Hover Effects ──────────────────────────────
+	&:hover {
+		.hpc-category-card__image {
+			transform: scale(1.1);
+		}
+
+		.hpc-category-card__overlay {
+			background: linear-gradient(to top,
+					rgba(0, 0, 0, 0.9) 0%,
+					rgba(0, 0, 0, 0.4) 50%,
+					rgba(0, 0, 0, 0.2) 100%);
+		}
+	}
+}
+
+// ─── Editor Specific Preview ────────────────────────
+.hpc-categories-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1.5rem;
+	padding: 1.5rem;
+
+}
+
+.hpc-category-preview-card {
+	background: #f0f0f0;
+	border-radius: 8px;
+	overflow: hidden;
+	aspect-ratio: 4 / 3;
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	padding: 1rem;
+	text-align: center;
+
+	&__img {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: #ddd;
+		color: #999;
+		font-size: 0.8rem;
+		text-transform: uppercase;
+	}
+
+	&__info {
+		position: relative;
+		z-index: 1;
+		background: rgba(0, 0, 0, 0.7);
+		color: #fff;
+		padding: 0.75rem;
+		border-radius: 4px;
+	}
+
+	&__name {
+		font-weight: 700;
+		font-size: 0.9rem;
+	}
+
+	&__count {
+		font-size: 0.75rem;
+		opacity: 0.8;
+	}
+}

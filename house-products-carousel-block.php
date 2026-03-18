@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       House Products Carousel Block
  * Description:       A modern Gutenberg block ensemble that displays WooCommerce products in carousel or grid layouts with house specifications.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.4
  * Requires PHP:      7.4
  * Author:            Steven Ayo
@@ -26,7 +26,7 @@ if ( ! defined( 'HPC_PLUGIN_URL' ) ) {
 	define( 'HPC_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 if ( ! defined( 'HPC_VERSION' ) ) {
-	define( 'HPC_VERSION', '1.1.0' );
+	define( 'HPC_VERSION', '1.2.0' );
 }
 
 /**
@@ -60,6 +60,9 @@ function register_blocks() {
 
 	// Register Grid Block.
 	register_block_type_from_metadata( HPC_PLUGIN_DIR . 'build/grid' );
+
+	// Register Categories Carousel Block.
+	register_block_type_from_metadata( HPC_PLUGIN_DIR . 'build/categories-carousel' );
 }
 add_action( 'init', __NAMESPACE__ . '\\register_blocks' );
 
@@ -70,28 +73,28 @@ add_action( 'init', __NAMESPACE__ . '\\register_blocks' );
  */
 function enqueue_frontend_assets( $force = false ) {
 	// Check for either block.
-	if ( ! $force && ! has_block( 'house-products/carousel' ) && ! has_block( 'house-products/grid' ) ) {
+	if ( ! $force && ! has_block( 'house-products/carousel' ) && ! has_block( 'house-products/grid' ) && ! has_block( 'house-products/categories-carousel' ) ) {
 		return;
 	}
 
-	// Splide assets (Carousel only).
-	if ( $force || has_block( 'house-products/carousel' ) ) {
-		$splide_css = HPC_PLUGIN_DIR . 'node_modules/@splidejs/splide/dist/css/splide-core.min.css';
-		$splide_js  = HPC_PLUGIN_DIR . 'node_modules/@splidejs/splide/dist/js/splide.min.js';
+	// Splide assets (Carousel-based blocks only).
+	if ( $force || has_block( 'house-products/carousel' ) || has_block( 'house-products/categories-carousel' ) ) {
+		$splide_css = HPC_PLUGIN_DIR . 'assets/vendor/splide/splide-core.min.css';
+		$splide_js  = HPC_PLUGIN_DIR . 'assets/vendor/splide/splide.min.js';
 
 		if ( file_exists( $splide_css ) ) {
-			wp_enqueue_style( 'hpc-splide-core', HPC_PLUGIN_URL . 'node_modules/@splidejs/splide/dist/css/splide-core.min.css', array(), HPC_VERSION );
+			wp_enqueue_style( 'hpc-splide-core', HPC_PLUGIN_URL . 'assets/vendor/splide/splide-core.min.css', array(), HPC_VERSION );
 		}
 		if ( file_exists( $splide_js ) ) {
-			wp_enqueue_script( 'hpc-splide', HPC_PLUGIN_URL . 'node_modules/@splidejs/splide/dist/js/splide.min.js', array(), HPC_VERSION, true );
+			wp_enqueue_script( 'hpc-splide', HPC_PLUGIN_URL . 'assets/vendor/splide/splide.min.js', array(), HPC_VERSION, true );
 		}
 
-		// Frontend initializer script.
-		$frontend_js = HPC_PLUGIN_DIR . 'build/carousel/frontend.js';
+		// Enqueue the common script that initializes Splide.
+		$frontend_js = HPC_PLUGIN_DIR . 'build/hpc-frontend.js';
 		if ( file_exists( $frontend_js ) ) {
-			$asset_file = HPC_PLUGIN_DIR . 'build/carousel/frontend.asset.php';
+			$asset_file = HPC_PLUGIN_DIR . 'build/hpc-frontend.asset.php';
 			$asset      = file_exists( $asset_file ) ? require $asset_file : array( 'dependencies' => array(), 'version' => HPC_VERSION );
-			wp_enqueue_script( 'hpc-frontend', HPC_PLUGIN_URL . 'build/carousel/frontend.js', array_merge( array( 'hpc-splide' ), $asset['dependencies'] ), $asset['version'], true );
+			wp_enqueue_script( 'hpc-frontend', HPC_PLUGIN_URL . 'build/hpc-frontend.js', array_merge( array( 'hpc-splide' ), $asset['dependencies'] ), $asset['version'], true );
 		}
 	}
 
@@ -127,9 +130,14 @@ function enqueue_editor_assets() {
 
 		if ( ! is_wp_error( $terms ) && is_array( $terms ) ) {
 			foreach ( $terms as $term ) {
+				$thumbnail_id = get_term_meta( $term->term_id, 'thumbnail_id', true );
+				$image_url    = $thumbnail_id ? wp_get_attachment_image_url( $thumbnail_id, 'medium_large' ) : '';
+
 				$categories[] = array(
 					'value' => (int) $term->term_id,
 					'label' => esc_html( $term->name ),
+					'count' => (int) $term->count,
+					'image' => $image_url,
 				);
 			}
 		}
@@ -139,6 +147,7 @@ function enqueue_editor_assets() {
 	$handles = array(
 		'house-products-carousel-editor-script',
 		'house-products-grid-editor-script',
+		'house-products-categories-carousel-editor-script',
 	);
 
 	foreach ( $handles as $handle ) {
@@ -194,3 +203,42 @@ function load_textdomain() {
 }
 add_action( 'init', __NAMESPACE__ . '\\load_textdomain' );
 
+/**
+ * Add category image to REST API response.
+ */
+function add_category_image_to_rest_api() {
+	register_rest_field(
+		'product_cat',
+		'image',
+		array(
+			'get_callback' => function( $term ) {
+				$thumbnail_id = get_term_meta( $term['id'], 'thumbnail_id', true );
+				if ( $thumbnail_id ) {
+					$image_url = wp_get_attachment_image_url( $thumbnail_id, 'medium_large' );
+					return array(
+						'id'  => $thumbnail_id,
+						'src' => $image_url,
+						'alt' => get_post_meta( $thumbnail_id, '_wp_attachment_image_alt', true ),
+					);
+				}
+				return null;
+			},
+			'schema' => array(
+				'description' => __( 'Category image', 'house-products-carousel' ),
+				'type'        => 'object',
+				'properties'  => array(
+					'id'  => array(
+						'type' => 'integer',
+					),
+					'src' => array(
+						'type' => 'string',
+					),
+					'alt' => array(
+						'type' => 'string',
+					),
+				),
+			),
+		)
+	);
+}
+add_action( 'rest_api_init', __NAMESPACE__ . '\\add_category_image_to_rest_api' );
